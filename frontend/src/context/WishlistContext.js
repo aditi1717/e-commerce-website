@@ -1,0 +1,59 @@
+import React, { createContext, useState, useContext, useEffect } from 'react';
+
+const WishlistContext = createContext();
+
+export const useWishlist = () => {
+  const context = useContext(WishlistContext);
+  if (!context) {
+    throw new Error('useWishlist must be used within WishlistProvider');
+  }
+  return context;
+};
+
+export const WishlistProvider = ({ children }) => {
+  const [wishlist, setWishlist] = useState([]);
+
+  useEffect(() => {
+    const savedWishlist = localStorage.getItem('wishlist');
+    if (savedWishlist) {
+      setWishlist(JSON.parse(savedWishlist));
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('wishlist', JSON.stringify(wishlist));
+  }, [wishlist]);
+
+  const addToWishlist = (product) => {
+    setWishlist(prevWishlist => {
+      const exists = prevWishlist.find(item => item._id === product._id);
+      if (exists) {
+        return prevWishlist;
+      }
+      return [...prevWishlist, product];
+    });
+  };
+
+  const removeFromWishlist = (productId) => {
+    setWishlist(prevWishlist => prevWishlist.filter(item => item._id !== productId));
+  };
+
+  const isInWishlist = (productId) => {
+    return wishlist.some(item => item._id === productId);
+  };
+
+  const getWishlistCount = () => {
+    return wishlist.length;
+  };
+
+  const value = {
+    wishlist,
+    addToWishlist,
+    removeFromWishlist,
+    isInWishlist,
+    getWishlistCount
+  };
+
+  return <WishlistContext.Provider value={value}>{children}</WishlistContext.Provider>;
+};
+
